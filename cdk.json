@@ -1,0 +1,4 @@
+{
+  "app": "ts-node -r tsconfig-paths/register deploy/stack.ts",
+  "toolkitStackName": "aws-cost-checker-serverless-bucket"
+}

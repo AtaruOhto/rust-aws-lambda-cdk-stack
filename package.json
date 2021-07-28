@@ -1,0 +1,34 @@
+{
+  "name": "aws-cost-checker-serverless",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "scripts": {
+    "build": "rustup target add x86_64-unknown-linux-musl && cargo build --release --target x86_64-unknown-linux-musl && mkdir -p ./target/cdk/release && cp ./target/x86_64-unknown-linux-musl/release/bootstrap ./target/cdk/release/bootstrap",
+    "build:clean": "rm -r ./target/cdk/release || echo '[build:clean] No existing release found.'",
+    "deploy": "npm run build:clean && npm run build && npm run cdk:deploy",
+    "destroy": "cdk destroy",
+    "cdk:deploy": "[[ $CI == 'true' ]] && export CDK_APPROVAL='never' || export CDK_APPROVAL='broadening'; cdk deploy --require-approval $CDK_APPROVAL '*'",
+    "cdk:bootstrap": "cdk bootstrap aws://$(aws sts get-caller-identity | jq -r .Account)/$AWS_REGION",
+    "cdklocal:start": "docker-compose up",
+    "cdklocal:clear-cache": "(rm ~/.cdk/cache/accounts.json || true) && (rm ~/.cdk/cache/accounts_partitions.json || true)",
+    "cdklocal:deploy": "npm run --silent cdklocal:clear-cache && CDK_LOCAL=true  cdklocal deploy --require-approval never '*'",
+    "cdklocal:bootstrap": "npm run --silent cdklocal:clear-cache && CDK_LOCAL=true  cdklocal bootstrap aws://000000000000/us-west-1"
+  },
+  "dependencies": {
+    "@aws-cdk/aws-lambda": "^1.115.0",
+    "@aws-cdk/aws-s3": "^1.115.0",
+    "@aws-cdk/core": "^1.115.0",
+    "@types/node": "^16.4.3",
+    "aws-cdk": "^1.115.0",
+    "ts-node": "^10.1.0",
+    "tsconfig-paths": "^3.10.1",
+    "typescript": "^4.3.5"
+  },
+  "devDependencies": {
+    "dotenv-cli": "^4.0.0"
+  }
+}

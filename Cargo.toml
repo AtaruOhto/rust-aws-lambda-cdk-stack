@@ -1,0 +1,20 @@
+[package]
+name = "aws-cost-checker-serverless"
+version = "0.1.0"
+edition = "2018"
+license = "MIT"
+
+[lib]
+name = "lib"
+path = "src/lib.rs"
+
+[[bin]]
+name = "bootstrap"
+path = "src/bin/bootstrap.rs"
+
+[dependencies]
+lambda_runtime = "0.3.0"
+serde = "1.0.126"
+serde_derive = "1.0.126"
+serde_json = "1.0.64"
+tokio = "1.9.0"

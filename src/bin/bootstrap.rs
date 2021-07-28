@@ -1,11 +1,11 @@
-use ::lib::handler;
-use ::lib::LambdaError;
-use lambda_runtime::handler_fn;
+use lambda_http::{
+    handler,
+    lambda_runtime::{self, Error},
+};
+use lib::hello;
 
 #[tokio::main]
-async fn main() -> Result<(), LambdaError> {
-    println!("execute bootstrap#main");
-    let runtime_handler = handler_fn(handler);
-    lambda_runtime::run(runtime_handler).await?;
+async fn main() -> Result<(), Error> {
+    lambda_runtime::run(handler(hello)).await?;
     Ok(())
 }

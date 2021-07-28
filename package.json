@@ -19,6 +19,7 @@
     "cdklocal:bootstrap": "npm run --silent cdklocal:clear-cache && CDK_LOCAL=true  cdklocal bootstrap aws://000000000000/us-west-1"
   },
   "dependencies": {
+    "@aws-cdk/aws-apigateway": "^1.115.0",
     "@aws-cdk/aws-lambda": "^1.115.0",
     "@aws-cdk/aws-s3": "^1.115.0",
     "@aws-cdk/core": "^1.115.0",

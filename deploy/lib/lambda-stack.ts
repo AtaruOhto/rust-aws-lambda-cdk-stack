@@ -1,37 +1,76 @@
-import * as core from "@aws-cdk/core";
-import * as lambda from "@aws-cdk/aws-lambda";
-import * as s3 from "@aws-cdk/aws-s3";
 import * as cdk from "@aws-cdk/core";
+import { AssetCode, Function, Runtime } from "@aws-cdk/aws-lambda";
+import {
+  RestApi,
+  LambdaIntegration,
+  IResource,
+  MockIntegration,
+  PassthroughBehavior,
+  Resource,
+} from "@aws-cdk/aws-apigateway";;
 
-const { CDK_LOCAL } = process.env;
 
 interface Props { }
 
-export class LambdaStack extends core.Stack {
+
+const addCorsOptions = (apiResource: IResource) => {
+  apiResource.addMethod(
+    "OPTIONS",
+    new MockIntegration({
+      integrationResponses: [
+        {
+          statusCode: "200",
+          responseParameters: {
+            "method.response.header.Access-Control-Allow-Headers":
+              "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+            "method.response.header.Access-Control-Allow-Origin": "'*'",
+            "method.response.header.Access-Control-Allow-Credentials":
+              "'false'",
+            "method.response.header.Access-Control-Allow-Methods":
+              "'OPTIONS,GET,PUT,POST,DELETE'",
+          },
+        },
+      ],
+      passthroughBehavior: PassthroughBehavior.NEVER,
+      requestTemplates: {
+        "application/json": '{"statusCode": 200}',
+      },
+    }),
+    {
+      methodResponses: [
+        {
+          statusCode: "200",
+          responseParameters: {
+            "method.response.header.Access-Control-Allow-Headers": true,
+            "method.response.header.Access-Control-Allow-Methods": true,
+            "method.response.header.Access-Control-Allow-Credentials": true,
+            "method.response.header.Access-Control-Allow-Origin": true,
+          },
+        },
+      ],
+    }
+  );
+}
+
+export class LambdaStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string, _props: Props) {
     super(scope, id);
-
+    console.log(id)
     const bootstrapLocation = `${__dirname}/../../target/cdk/release`;
 
-    const entryId = "main";
-    const entryFnName = `${id}-${entryId}`;
-    const entry = new lambda.Function(this, entryId, {
-      functionName: entryFnName,
-      description: "Rust + Lambda + CDK",
-      runtime: lambda.Runtime.PROVIDED_AL2,
+    const getCostUsageLambda = new Function(this, "Retrieves cost and usage metrics for your account.", {
+      functionName: "get-cost-usage",
+      runtime: Runtime.PROVIDED_AL2,
       handler: `${id}`,
-      code:
-        CDK_LOCAL !== "true"
-          ? lambda.Code.fromAsset(bootstrapLocation)
-          : lambda.Code.fromBucket(s3.Bucket.fromBucketName(this, `LocalBucket`, "__local__"), bootstrapLocation),
-      memorySize: 256,
-      timeout: cdk.Duration.seconds(10),
-      tracing: lambda.Tracing.ACTIVE,
+      code: new AssetCode(bootstrapLocation)
     });
 
-    entry.addEnvironment("AWS_NODEJS_CONNECTION_REUSE_ENABLED", "1");
+    const api = new RestApi(this, "AwsCostCheckerServerlessAPI", {
+      restApiName: "AwsCostCheckerServerlessAPI",
+    });
 
-    core.Aspects.of(entry).add(new cdk.Tag("service-type", "API"));
-    core.Aspects.of(entry).add(new cdk.Tag("billing", `lambda-${entryFnName}`));
+    const costs: Resource = api.root.addResource("costs")
+    costs.addMethod('GET', new LambdaIntegration(getCostUsageLambda));
+    addCorsOptions(costs);
   }
 }

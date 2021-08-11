@@ -5,6 +5,11 @@ yarn bootstrap
 ```
 
 ```
+yarn deploy
+```
+
+
+```
  curl "https://hgggpelmj4.execute-api.us-east-1.amazonaws.com/prod/example?argument=Example"
 ```
 
